@@ -140,3 +140,26 @@ input[type='submit']:active {
 .preact:hover {
   opacity: 1;
 } */
+
+.form {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  /* box-shadow: 0 0 8px 2px rgba(0, 0, 0, 0.2);
+  padding: 10px;
+  border-radius: 6px; */
+}
+
+form {
+  width: 400px;
+}
+
+.link-text {
+  padding: 6px 0;
+}
+
+.link.active {
+  display: none;
+}
