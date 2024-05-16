@@ -1,0 +1,13 @@
+/* p {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-transform: uppercase;
+  font-weight: bold;
+  font-size: 40px;
+} */
+
+.router {
+  display: flex;
+}

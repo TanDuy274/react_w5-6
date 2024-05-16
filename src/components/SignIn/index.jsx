@@ -2,14 +2,46 @@ import { LockOutlined } from '@mui/icons-material';
 import { Avatar, Button, TextField } from '@mui/material';
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import './SignIn.css';
+import PropTypes from 'prop-types';
 
-SignIn.propTypes = {};
+SignIn.propTypes = {
+  handleEmail: PropTypes.func,
+};
 
-function SignIn(props) {
-  const { register, handleSubmit } = useForm();
+SignIn.defaultValue = {
+  handleEmail: null,
+};
+
+function SignIn({ handleEmail }) {
+  const initAcc = JSON.parse(localStorage.getItem('accArray'));
+
+  const { register, reset, handleSubmit } = useForm();
   const [data, setData] = useState('');
+  const [login, setLogin] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleSignIn = (data) => {
+    let flag = false;
+    initAcc.forEach((acc) => {
+      if (acc.email === data.email && acc.password === data.password) {
+        flag = true;
+        console.log('ok');
+        setLogin(true);
+        console.log(location);
+        navigate('/dashboard', { replace: true });
+        handleEmail(data.email);
+        return;
+      }
+    });
+    if (!flag) {
+      flag = false;
+      console.log('not ok');
+      setLogin(false);
+    }
+  };
 
   return (
     <div className='form'>
@@ -20,11 +52,11 @@ function SignIn(props) {
       {/* <Typography>Sign in</Typography> */}
       <p className='text-3xl font-bold text-blue-600/75'>Sign in</p>
 
-      <form onSubmit={handleSubmit((data) => setData(JSON.stringify(data)))}>
+      <form onSubmit={handleSubmit((data) => handleSignIn(data))}>
         <TextField
-          {...register('username')}
-          placeholder='User name'
-          label='User name'
+          {...register('email')}
+          placeholder='Email'
+          label='Email'
           margin='normal'
           fullWidth
         />
@@ -39,13 +71,13 @@ function SignIn(props) {
 
         <NavLink
           to='/signin'
-          className='link'
+          className='link-signin'
         >
           <p className='link-text'>Sign in</p>
         </NavLink>
         <NavLink
           to='/signup'
-          className='link'
+          className='link-signup'
         >
           <p className='link-text'>Sign up</p>
         </NavLink>
@@ -56,7 +88,7 @@ function SignIn(props) {
         >
           Sign in
         </Button>
-        <p>{data}</p>
+        {/* <p>{data}</p> */}
       </form>
     </div>
   );

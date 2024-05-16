@@ -142,7 +142,7 @@ input[type='submit']:active {
 } */
 
 .form {
-  height: 100vh;
+  /* height: 100vh; */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -160,6 +160,6 @@ form {
   padding: 6px 0;
 }
 
-.link.active {
+.link-signin.active {
   display: none;
 }

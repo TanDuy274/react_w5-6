@@ -1,6 +1,4 @@
-import React, { useState } from 'react';
-import { NavLink } from 'react-router-dom';
-import './SignUp.css';
+import { yupResolver } from '@hookform/resolvers/yup';
 import {
   Button,
   FormControl,
@@ -11,41 +9,75 @@ import {
   Radio,
   RadioGroup,
   TextField,
-  Typography,
 } from '@mui/material';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
+import { NavLink } from 'react-router-dom';
 import * as yup from 'yup';
+import './SignUp.css';
+import ShowUsers from '../ShowUsers';
 
 SignUp.propTypes = {};
 
 function SignUp(props) {
-  const schema = yup.object({
-    firstName: yup.string().required('First Name is required'),
-    lastName: yup.string().required('Last Name is required'),
-    hobby: yup.string().notOneOf([''], 'Hobby is required'),
-    gender: yup.string().required('Gender is required'),
-    email: yup.string().required('Email is required'),
-    phoneNumber: yup.number().required('Phone number is required'),
-    password: yup.string().required('Please enter password'),
-    confirmPassword: yup
-      .string()
-      .required('Please confirm password')
-      .oneOf([yup.ref('password')], 'Passwords do not match'),
-  });
+  const initUser = JSON.parse(localStorage.getItem('accArray')) || [
+    {
+      id: 1,
+      firstName: 'name 1',
+      lastName: 'name 1',
+      hobby: 'Hobby2',
+      gender: 'female',
+      email: 'name1@email.com',
+      phoneNumber: 123,
+      password: '123',
+      confirmPassword: '123',
+    },
+    {
+      id: 2,
+      firstName: 'name 1',
+      lastName: 'name 1',
+      hobby: 'Hobby2',
+      gender: 'female',
+      email: 'name1@email.com',
+      phoneNumber: 123,
+      password: '123',
+      confirmPassword: '123',
+    },
+  ];
+
+  let nextId = initUser.length + 1;
+  // let emailErrorMessage = '';
+
+  const [data, setData] = useState(initUser);
+  const [emailError, setEmailError] = useState(false);
+  const [emailErrorMessage, setEmailErrorMessage] = useState('');
+
+  const schema = yup
+    .object({
+      firstName: yup.string().required('First Name is required'),
+      lastName: yup.string().required('Last Name is required'),
+      hobby: yup.string().notOneOf([''], 'Hobby is required'),
+      gender: yup.string().required('Gender is required'),
+      email: yup.string().required('Email is required'),
+      phoneNumber: yup.number().required('Phone number is required'),
+      password: yup.string().required('Please enter password'),
+      confirmPassword: yup
+        .string()
+        .required('Please confirm password')
+        .oneOf([yup.ref('password')], 'Passwords do not match'),
+    })
+    .required();
 
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm({
     resolver: yupResolver(schema),
   });
 
-  const [data, setData] = useState('');
-  // console.log(data);
-
-  const currencies = [
+  const hobbys = [
     {
       value: 'Hobby1',
       label: 'Hobby1',
@@ -64,41 +96,48 @@ function SignUp(props) {
     },
   ];
 
-  // const [value, setValue] = React.useState('female');
-
-  // const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-  //   setValue((event.target as HTMLInputElement).value);
-  // };
+  const submitForm = (user) => {
+    let flag = true;
+    data.forEach((acc) => {
+      if (acc.email === user.email) {
+        flag = false;
+        setEmailError(true);
+        setEmailErrorMessage('email duplicate');
+        return;
+      }
+    });
+    if (flag) {
+      setData([...data, { id: nextId++, ...user }]);
+      setEmailError(false);
+      setEmailErrorMessage('');
+      reset();
+    }
+  };
 
   return (
     <div className='form'>
-      <form onSubmit={handleSubmit((data) => setData(JSON.stringify(data)))}>
-        {/* <Typography>Sign Up</Typography> */}
-
+      <form onSubmit={handleSubmit((user) => submitForm(user))}>
         <p className='text-3xl font-bold text-blue-600/75'>Sign up</p>
-
         <TextField
           {...register('firstName')}
           error={errors.firstName}
           id='standard-error-helper-text'
           label='First Name'
-          helperText={errors?.firstName && errors.firstName.message}
+          helperText={errors.firstName && errors.firstName?.message}
           variant='standard'
           fullWidth
           margin='normal'
         />
-
         <TextField
           {...register('lastName')}
           error={errors.lastName}
           id='standard-error-helper-text'
           label='Last Name'
-          helperText={errors?.lastName && errors.lastName.message}
+          helperText={errors.lastName && errors.lastName?.message}
           variant='standard'
           fullWidth
           margin='normal'
         />
-
         <div className='hobby-gender'>
           <div className='hobby'>
             <TextField
@@ -107,13 +146,12 @@ function SignUp(props) {
               id='hobby'
               select
               label='Hobby'
-              // defaultValue='EUR'
-              helperText={errors?.hobby && errors.hobby.message}
+              helperText={errors.hobby && errors.hobby?.message}
               variant='standard'
               fullWidth
               margin='normal'
             >
-              {currencies.map((option) => (
+              {hobbys.map((option) => (
                 <MenuItem
                   key={option.value}
                   value={option.value}
@@ -127,13 +165,7 @@ function SignUp(props) {
           <div className='gender'>
             <FormControl margin='normal'>
               <FormLabel error={errors.gender}>Gender</FormLabel>
-              <RadioGroup
-                row
-                // aria-labelledby='demo-controlled-radio-buttons-group'
-                // name='controlled-radio-buttons-group'
-                // value={value}
-                // onChange={handleChange}
-              >
+              <RadioGroup row>
                 <FormControlLabel
                   value='female'
                   control={<Radio />}
@@ -147,66 +179,63 @@ function SignUp(props) {
                   {...register('gender')}
                 />
               </RadioGroup>
-              <FormHelperText>{errors?.gender && errors.gender.message}</FormHelperText>
+              <FormHelperText error={errors.gender}>
+                {errors.gender && errors.gender?.message}
+              </FormHelperText>
             </FormControl>
           </div>
         </div>
-
         <TextField
           {...register('email')}
-          error={errors.email}
+          error={errors.email || emailError}
           id='standard-error-helper-text'
           label='Email'
-          helperText={errors?.email && errors.email.message}
+          helperText={(errors.email && errors.email?.message) || (emailError && emailErrorMessage)}
           variant='standard'
           fullWidth
           margin='normal'
         />
-
         <TextField
           {...register('phoneNumber')}
           error={errors.phoneNumber}
           id='standard-error-helper-text'
           label='Phone number'
-          helperText={errors?.phoneNumber && errors.phoneNumber.messages}
+          helperText={errors.phoneNumber && errors.phoneNumber?.messages}
           variant='standard'
           fullWidth
           margin='normal'
         />
-
         <TextField
           {...register('password')}
           error={errors.password}
           id='standard-error-helper-text'
           label='Password'
           type='password'
-          helperText={errors?.password && errors.password.message}
+          helperText={errors.password && errors.password?.message}
           variant='standard'
           fullWidth
           margin='normal'
         />
-
         <TextField
           {...register('confirmPassword')}
           error={errors.confirmPassword}
           id='standard-error-helper-text'
           label='Confirm Password'
           type='password'
-          helperText={errors?.confirmPassword && errors.confirmPassword.message}
+          helperText={errors.confirmPassword && errors.confirmPassword?.message}
           variant='standard'
           fullWidth
           margin='normal'
         />
         <NavLink
           to='/signin'
-          className='link'
+          className='link-signin'
         >
           <p className='link-text'>Sign in</p>
         </NavLink>
-
         <NavLink
           to='/signup'
-          className='link'
+          className='link-signup'
         >
           <p className='link-text'>Sign up</p>
         </NavLink>
@@ -217,8 +246,16 @@ function SignUp(props) {
         >
           Sign up
         </Button>
+        <Button
+          variant='outlined'
+          type='reset'
+          fullWidth
+          onClick={(() => reset(), localStorage.setItem('accArray', JSON.stringify(data)))}
+        >
+          Reset
+        </Button>
       </form>
-      <p>{data}</p>
+      <ShowUsers data={data} />
     </div>
   );
 }
